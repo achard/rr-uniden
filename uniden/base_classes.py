@@ -80,6 +80,11 @@ class AlertLight:
 
 @dataclass
 class UnidenTextType:
+    """
+    Abstract class for storing information from the Uniden .hpd config file.
+    Extracts the data line from the config file, but does not perform any additional work - just stores it as text.
+    Inherit from this class to do more work.
+    """
     line_prefix = ""
     tabs = 3
     value: str

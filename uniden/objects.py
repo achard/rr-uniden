@@ -4,6 +4,10 @@ from typing import TextIO
 
 
 class ServiceType:
+    """
+    Stores a map of the Uniden service types with their respective indexes. Makes it easy to find them by either name or
+    the arbitrary number Uniden assigned for storing in their config files.
+    """
     indexes = {
         "15": "Aircraft",
         "17": "Business",
@@ -55,7 +59,7 @@ class ServiceType:
         return cls.indexes[index]
 
     @classmethod
-    def find_service(cls, name):
+    def find_index(cls, name):
         return cls.services[name]
 
     def __init__(self, value: str):
@@ -69,6 +73,9 @@ class ServiceType:
 
 @dataclass(slots=True)
 class Radio:
+    """
+    Stores all relevant information for a given trunked radio UID
+    """
     line_prefix = "UnitIds"
     name: str
     radio_id: int
