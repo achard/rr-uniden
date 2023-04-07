@@ -107,6 +107,9 @@ class Radio:
 
 @dataclass
 class TrunkedChannel:
+    """
+    All the relevant info for a Trunked system channel
+    """
     line_prefix = "TGID"
     name: str
     avoid: UnidenBool
@@ -167,6 +170,9 @@ class TrunkedChannel:
 
 @dataclass(order=True, slots=True)
 class TrunkedGroup:
+    """
+    All the relevant info for a trunked channel group - also known as departments depending on the software you use
+    """
     line_prefix = "T-Group"
     name: str
     avoid: UnidenBool
@@ -214,6 +220,9 @@ class TrunkedGroup:
 
 @dataclass
 class ConventionalFrequency:
+    """
+    All the relevant info for a conventional system channel
+    """
     line_prefix = "C-Freq"
     name: str
     avoid: UnidenBool
@@ -278,6 +287,9 @@ class ConventionalFrequency:
 
 @dataclass(order=True, slots=True)
 class ConventionalGroup:
+    """
+    All the relevant info for a conventional channel group - also known as departments depending on the software you use
+    """
     line_prefix = "C-Group"
     name: str
     avoid: UnidenBool
