@@ -340,10 +340,44 @@ class ConventionalGroup:
 class SiteFrequency(UnidenTextType):
     line_prefix = "T-Freq"
 
+    def __str__(self):
+        parts = self.value.split("\t")
+        return f"{int(parts[1]) / 1_000_000} Mhz"
 
-class BandPlan(UnidenTextType):
+
+@dataclass
+class BandPlan:
     line_prefix = "BandPlan_P25"
     tabs = 2
+    band_plans: list[tuple] = None
+
+    def __post_init__(self):
+        if self.band_plans is None:
+            self.band_plans = [(0, 0)] * 16
+
+    def export(self):
+        data = ''
+        for entry in self.band_plans:
+            if data != '':
+                data += "\t"
+            data += f"{entry[0]}\t{entry[1]}"
+        return f"{self.line_prefix}{self.tabs_text}{data}\n"
+
+    @property
+    def tabs_text(self):
+        return "\t" * self.tabs
+
+    @classmethod
+    def from_text(cls, text):
+        text = text.strip("\n")
+        offset = len(cls.line_prefix) + cls.tabs
+        if text[:offset] == cls.line_prefix + "\t" * cls.tabs:
+            text = text[offset:]
+            values = text.split('\t')
+            pairs = list(zip(values[::2], values[1::2]))
+        else:
+            raise TypeError(f"Text does not match {cls.__name__} type")
+        return cls(pairs)
 
 
 @dataclass
@@ -502,7 +536,7 @@ class UnidenFile:
                         if next_line.startswith(TrunkedSystem.line_prefix):
                             config_file.seek(file_pos)
                             uniden_file.systems.append(System.from_file(config_file))
-                        if next_line.startswith(ConventionalSystem.line_prefix):
+                        elif next_line.startswith(ConventionalSystem.line_prefix):
                             config_file.seek(file_pos)
                             uniden_file.systems.append(System.from_file(config_file))
                         elif next_line == "":
