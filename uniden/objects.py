@@ -1,6 +1,7 @@
-from .base_classes import *
 from dataclasses import dataclass, field
 from typing import TextIO
+
+from .base_classes import *
 
 
 class ServiceType:
@@ -165,7 +166,7 @@ class TrunkedChannel:
 
 
 @dataclass(order=True, slots=True)
-class Department:
+class TrunkedGroup:
     line_prefix = "T-Group"
     name: str
     avoid: UnidenBool
@@ -180,7 +181,7 @@ class Department:
         return data
 
     def __repr__(self):
-        return f"Department {self.name} QK {self.quick_key} [{len(self.channels)} Channels]"
+        return f"TrunkedGroup {self.name} QK {self.quick_key} [{len(self.channels)} Channels]"
 
     @staticmethod
     def from_text(text):
@@ -188,9 +189,9 @@ class Department:
         if text[:10] == "T-Group\t\t\t":
             text = text[10:]
         else:
-            raise TypeError("Text does not match Department type")
+            raise TypeError("Text does not match TrunkedGroup type")
         values = text.split('\t')
-        return Department(
+        return TrunkedGroup(
             name=values[0],
             avoid=UnidenBool(values[1]),
             range=UnidenRange(values[2], values[3], values[4], values[5]),
@@ -199,16 +200,129 @@ class Department:
 
     @classmethod
     def from_file(cls, file: TextIO):
-        department = cls.from_text(file.readline())
+        group = cls.from_text(file.readline())
         while True:
             file_pos = file.tell()
             line = file.readline()
             match line.split("\t")[0]:
                 case TrunkedChannel.line_prefix:
-                    department.channels.append(TrunkedChannel.from_text(line))
+                    group.channels.append(TrunkedChannel.from_text(line))
                 case _:
                     file.seek(file_pos)
-                    return department
+                    return group
+
+
+@dataclass
+class ConventionalFrequency:
+    line_prefix = "C-Freq"
+    name: str
+    avoid: UnidenBool
+    freq: int
+    modulation: str
+    audio_option: str
+    service_type: ServiceType
+    attenuator: UnidenBool
+    delay: int
+    volume_offset: int
+    alert_tone: AlertTone
+    alert_light: AlertLight
+    number_tag: str
+    p_channel: UnidenBool
+
+    def export(self):
+        return f"{self.line_prefix}\t\t\t{self.name}\t{self.avoid}\t{self.freq}\t{self.modulation}\t{self.audio_option}\t{self.service_type.index}\t{self.attenuator}\t{self.delay}\t{self.volume_offset}\t{self.alert_tone.export()}\t{self.alert_light.export()}\t{self.number_tag}\t{self.p_channel}\n"
+
+    def __repr__(self):
+        return f'{self.name} Frequency: {self.freq / 1_000_000}'
+
+    def __eq__(self, other):
+        if isinstance(other, ConventionalFrequency):
+            if other.freq == self.freq:
+                return True
+        return False
+
+    def __gt__(self, other):
+        if self.freq > other.freq:
+            return True
+        return False
+
+    def __lt__(self, other):
+        if self.freq > other.freq:
+            return True
+        return False
+
+    @classmethod
+    def from_text(cls, text) -> 'ConventionalFrequency':
+        text = text.strip("\n")
+        if text[:9] == "C-Freq\t\t\t":
+            text = text[9:]
+        else:
+            raise TypeError("Text does not match TrunkedChannel type")
+        values = text.split('\t')
+        return ConventionalFrequency(
+            name=values[0],
+            avoid=UnidenBool(values[1]),
+            freq=values[2],
+            modulation=values[3],
+            audio_option=values[4],
+            service_type=ServiceType(values[5]),
+            attenuator=values[6],
+            delay=values[7],
+            volume_offset=values[8],
+            alert_tone=AlertTone((values[9], values[10])),
+            alert_light=AlertLight((values[11], values[12])),
+            number_tag=values[13],
+            p_channel=values[14]
+        )
+
+
+@dataclass(order=True, slots=True)
+class ConventionalGroup:
+    line_prefix = "C-Group"
+    name: str
+    avoid: UnidenBool
+    range: UnidenRange
+    quick_key: int
+    channels: list[ConventionalFrequency] = field(default_factory=list)
+    filter: str = "Global"
+
+    def export(self):
+        data = f"C-Group\t\t\t{self.name}\t{self.avoid}\t{self.range}\t{self.quick_key}\t{self.filter}\n"
+        for channel in self.channels:
+            data += channel.export()
+        return data
+
+    def __repr__(self):
+        return f"TrunkedGroup {self.name} QK {self.quick_key} [{len(self.channels)} Channels]"
+
+    @classmethod
+    def from_text(cls, text):
+        text = text.strip("\n")
+        if text[:10] == f"{cls.line_prefix}\t\t\t":
+            text = text[10:]
+        else:
+            raise TypeError("Text does not match TrunkedGroup type")
+        values = text.split('\t')
+        return ConventionalGroup(
+            name=values[0],
+            avoid=UnidenBool(values[1]),
+            range=UnidenRange(values[2], values[3], values[4], values[5]),
+            quick_key=values[6],
+            filter=values[7]
+        )
+
+    @classmethod
+    def from_file(cls, file: TextIO):
+        group = cls.from_text(file.readline())
+        while True:
+            file_pos = file.tell()
+            line = file.readline()
+            match line.split("\t")[0]:
+                case ConventionalFrequency.line_prefix:
+                    group.channels.append(ConventionalFrequency.from_text(line))
+                case _:
+                    file.seek(file_pos)
+                    return group
 
 
 class SiteFrequency(UnidenTextType):
@@ -272,10 +386,11 @@ class DQKStatus:
 
 @dataclass
 class System:
-    line_prefix = "Trunk"
+    system_types = ["Trunk", "Conventional"]
+    line_prefix: str
     value: str
     dqk_status: DQKStatus | None = None
-    departments: list = field(default_factory=list)
+    groups: list[TrunkedGroup | ConventionalGroup] = field(default_factory=list)
     sites: list = field(default_factory=list)
     radios: list[Radio] = field(default_factory=list)
 
@@ -287,23 +402,27 @@ class System:
             data += radio.export()
         for site in self.sites:
             data += site.export()
-        for department in self.departments:
-            data += department.export()
+        for group in self.groups:
+            data += group.export()
         return data
 
     @classmethod
     def from_text(cls, text) -> 'System':
         text = text.strip("\n")
-        if text[:8] == "Trunk\t\t\t":
-            text = text[8:]
+        for system_type in cls.system_types:
+            if text[:len(system_type) + 3] == f"{system_type}\t\t\t":
+                text = text[len(system_type) + 3:]
+                break
         else:
             raise TypeError("Text does not match System type")
-        return System(value=text)
+        return System(line_prefix=system_type, value=text)
 
     @classmethod
     def from_file(cls, file: TextIO):
         line = file.readline()
-        if line.startswith(System.line_prefix):
+        if line.startswith(TrunkedSystem.line_prefix):
+            system = System.from_text(line)
+        elif line.startswith(ConventionalSystem.line_prefix):
             system = System.from_text(line)
         else:
             raise TypeError("Text does not match System type")
@@ -313,15 +432,22 @@ class System:
             match line.split("\t")[0]:
                 case Radio.line_prefix:
                     system.radios.append(Radio.from_text(line))
-                case Department.line_prefix:
+                case TrunkedGroup.line_prefix:
                     file.seek(file_pos)
-                    system.departments.append(Department.from_file(file))
+                    system.groups.append(TrunkedGroup.from_file(file))
+                case ConventionalGroup.line_prefix:
+                    file.seek(file_pos)
+                    system.groups.append(ConventionalGroup.from_file(file))
                 case DQKStatus.line_prefix:
                     system.dqk_status = DQKStatus.from_text(line)
                 case Site.line_prefix:
                     file.seek(file_pos)
                     system.sites.append(Site.from_file(file))
-                case cls.line_prefix:
+                case ConventionalSystem.line_prefix:
+                    print("Found next system, continuing")
+                    file.seek(file_pos)
+                    return system
+                case TrunkedSystem.line_prefix:
                     print("Found next system, continuing")
                     file.seek(file_pos)
                     return system
@@ -332,6 +458,14 @@ class System:
                     print(line)
                     file.seek(file_pos)
                     return system
+
+
+class ConventionalSystem(System):
+    line_prefix = "Conventional"
+
+
+class TrunkedSystem(System):
+    line_prefix = "Trunk"
 
 
 @dataclass
@@ -353,7 +487,10 @@ class UnidenFile:
                     while True:
                         file_pos = config_file.tell()
                         next_line = config_file.readline()
-                        if next_line.startswith(System.line_prefix):
+                        if next_line.startswith(TrunkedSystem.line_prefix):
+                            config_file.seek(file_pos)
+                            uniden_file.systems.append(System.from_file(config_file))
+                        if next_line.startswith(ConventionalSystem.line_prefix):
                             config_file.seek(file_pos)
                             uniden_file.systems.append(System.from_file(config_file))
                         elif next_line == "":

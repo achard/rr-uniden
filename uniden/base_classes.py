@@ -2,6 +2,10 @@ from dataclasses import dataclass
 
 
 class UnidenBool:
+    """
+    Stores and returns a Uniden boolean value of On or Off.
+    """
+
     def __init__(self, value: str | bool):
         if isinstance(value, bool):
             self.value = value
@@ -22,6 +26,10 @@ class UnidenBool:
 
 
 class UnidenRange:
+    """
+    Stores and returns values for the location and range setting on trunked sites etc.
+    """
+
     def __init__(self, lat: float = 0, long: float = 0, distance: float = 0, shape="Circle"):
         self.latitude = lat
         self.longitude = long
@@ -33,6 +41,10 @@ class UnidenRange:
 
 
 class AlertTone:
+    """
+    Stores and returns values for the Alert Tone setting
+    """
+
     def __init__(self, value: tuple[str | int, str | int]):
         self.value, self.volume = value
 
@@ -58,6 +70,9 @@ class AlertTone:
 
 
 class AlertLight:
+    """
+    Stores and returns values for the Alert Lights settings
+    """
 
     def __init__(self, value: tuple[str, str]):
         colours = ["Off", "Red", "Green", "Blue", "White", "Cyan", "Magenta", "Yellow"]
