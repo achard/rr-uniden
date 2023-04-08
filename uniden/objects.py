@@ -22,7 +22,7 @@ class ServiceType:
         "8": "Fire-Tac",
         "24": "Fire-Talk",
         "13": "Ham",
-        "12": "Hospitak",
+        "12": "Hospital",
         "11": "Interop",
         "2": "Law Dispatch",
         "7": "Law-Tac",
@@ -50,10 +50,10 @@ class ServiceType:
         "214": "Custom 7",
         "215": "Custom 8"
     }
-    services = {value: key for key, value in enumerate(indexes)}
+    services = {value: key for key, value in indexes.items()}
 
     def __str__(self):
-        return f"{self.value}"
+        return f"{self._value}"
 
     @classmethod
     def find_name(cls, index):
@@ -63,13 +63,33 @@ class ServiceType:
     def find_index(cls, name):
         return cls.services[name]
 
-    def __init__(self, value: str):
+    @property
+    def value(self):
+        return self._value
+
+    @value.setter
+    def value(self, value: str | int):
+        if isinstance(value, int):
+            value = str(value)
         if value.isdigit():
             self.index = value
-            self.value = self.indexes[value]
+            self._value = self.indexes[value]
         else:
             self.index = self.services[value]
-            self.value = self.indexes[self.index]
+            self._value = self.indexes[self.index]
+
+    def __init__(self, value: str | int = None):
+        if isinstance(value, int):
+            value = str(value)
+        if value is None:
+            self.index = "21"
+            self._value = self.indexes[self.index]
+        elif value.isdigit():
+            self.index = value
+            self._value = self.indexes[value]
+        else:
+            self.index = self.services[value]
+            self._value = self.indexes[self.index]
 
 
 @dataclass(slots=True)
