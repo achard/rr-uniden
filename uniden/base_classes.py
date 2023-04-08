@@ -6,16 +6,18 @@ class UnidenBool:
     Stores and returns a Uniden boolean value of On or Off.
     """
 
-    def __init__(self, value: str | bool):
+    def __init__(self, value: str | bool | None = None):
         if isinstance(value, bool):
             self.value = value
         elif isinstance(value, str):
             if value == "On":
                 self.value = True
-            if value == "Off":
+            elif value == "Off":
                 self.value = False
             else:
                 raise ValueError
+        elif value is None:
+            self.value = False
         else:
             raise ValueError
 
@@ -30,7 +32,7 @@ class UnidenRange:
     Stores and returns values for the location and range setting on trunked sites etc.
     """
 
-    def __init__(self, lat: float = 0, long: float = 0, distance: float = 0, shape="Circle"):
+    def __init__(self, lat: str = "0.000000", long: str = "0.000000", distance: str = "0.0", shape="Circle"):
         self.latitude = lat
         self.longitude = long
         self.distance = distance
@@ -45,8 +47,11 @@ class AlertTone:
     Stores and returns values for the Alert Tone setting
     """
 
-    def __init__(self, value: tuple[str | int, str | int]):
-        self.value, self.volume = value
+    def __init__(self, value: tuple[str | int, str | int] = None):
+        if value is None:
+            self.value, self.volume = 0, 0
+        else:
+            self.value, self.volume = value
 
     @property
     def textvalue(self):
@@ -74,10 +79,13 @@ class AlertLight:
     Stores and returns values for the Alert Lights settings
     """
 
-    def __init__(self, value: tuple[str, str]):
+    def __init__(self, value: tuple[str, str] = None):
         colours = ["Off", "Red", "Green", "Blue", "White", "Cyan", "Magenta", "Yellow"]
         states = ["On", "Slow Blink", "Fast Blink"]
-        self.colour, self.state = value
+        if value is None:
+            self.colour, self.state = "Off", "On"
+        else:
+            self.colour, self.state = value
         if self.colour not in colours:
             self.colour = "Off"
         if self.state not in states:
@@ -120,3 +128,37 @@ class UnidenTextType:
         else:
             raise TypeError(f"Text does not match {cls.__name__} type")
         return cls(text)
+
+
+def test_uniden_bool():
+    x = UnidenBool()
+    assert x.value is False
+    x = UnidenBool('Off')
+    assert x.value is False
+    x = UnidenBool('On')
+    assert x.value is True
+    x = UnidenBool(False)
+    assert str(x) == "Off"
+    assert x.value is False
+    x = UnidenBool(True)
+    assert str(x) == 'On'
+    assert x.value is True
+
+
+def test_uniden_range():
+    x = UnidenRange()
+    assert str(x) == "0.000000\t0.000000\t0.0\tCircle"
+
+
+def test_alert_tone():
+    x = AlertTone()
+    assert x.value == 0
+    assert x.volume == 0
+    assert str(x) == "Off\tAuto"
+
+
+def test_alert_light():
+    x = AlertLight()
+    assert x.state == "On"
+    assert x.colour == "Off"
+    assert str(x) == "Off\tOn"
