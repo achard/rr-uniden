@@ -128,4 +128,3 @@ class UnidenTextType:
         else:
             raise TypeError(f"Text does not match {cls.__name__} type")
         return cls(text)
-

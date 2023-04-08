@@ -44,4 +44,3 @@ def test_service_types():
     assert str(x) == "Aircraft"
     x = ServiceType('Other')
     assert x.index == "21"
-
