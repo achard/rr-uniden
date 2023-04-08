@@ -1,4 +1,4 @@
-from uniden import *
+from uniden import UnidenBool, UnidenRange, AlertLight, AlertTone, ServiceType
 
 
 def test_uniden_bool():
@@ -33,3 +33,15 @@ def test_alert_light():
     assert x.state == "On"
     assert x.colour == "Off"
     assert str(x) == "Off\tOn"
+
+
+def test_service_types():
+    x = ServiceType()
+    assert str(x) == "Other"
+    assert x.index == "21"
+    assert x.value == "Other"
+    x = ServiceType(15)
+    assert str(x) == "Aircraft"
+    x = ServiceType('Other')
+    assert x.index == "21"
+

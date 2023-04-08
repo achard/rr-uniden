@@ -1,7 +1,7 @@
 from dataclasses import dataclass, field
 from typing import TextIO
 
-from .base_classes import *
+from .base_classes import UnidenBool, UnidenRange, AlertLight, AlertTone, UnidenTextType
 
 
 class ServiceType:
