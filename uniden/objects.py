@@ -100,8 +100,8 @@ class Radio:
     line_prefix = "UnitIds"
     name: str
     radio_id: int
-    alert_tone: AlertTone
-    alert_light: AlertLight
+    alert_tone: AlertTone = field(default_factory=lambda: AlertTone())
+    alert_light: AlertLight = field(default_factory=lambda: AlertLight())
 
     def export(self):
         return f"UnitIds\t\t\t{self.name}\t{self.radio_id}\t{self.alert_tone}\t{self.alert_light}\n"
@@ -131,17 +131,17 @@ class TrunkedChannel:
     All the relevant info for a Trunked system channel
     """
     line_prefix = "TGID"
-    name: str
-    avoid: UnidenBool
     tgid: int
-    tdma_slot: str
-    service_type: ServiceType
-    delay: int
-    volume_offset: int
-    alert_tone: AlertTone
-    alert_light: AlertLight
-    number_tag: str
-    p_channel: UnidenBool
+    name: str
+    avoid: UnidenBool = field(default_factory=lambda: UnidenBool())
+    tdma_slot: str = 'ALL'
+    service_type: ServiceType = field(default_factory=lambda: ServiceType())
+    delay: int = 2
+    volume_offset: int = 0
+    alert_tone: AlertTone = field(default_factory=lambda: AlertTone())
+    alert_light: AlertLight = field(default_factory=lambda: AlertLight())
+    number_tag: str = 'Off'
+    p_channel: UnidenBool = field(default_factory=lambda: UnidenBool())
 
     def export(self):
         return f"{self.line_prefix}\t\t\t{self.name}\t{self.avoid}\t{self.tgid}\t{self.tdma_slot}\t{self.service_type.index}\t{self.delay}\t{self.volume_offset}\t{self.alert_tone.export()}\t{self.alert_light.export()}\t{self.number_tag}\t{self.p_channel}\tAny\n"
@@ -195,9 +195,9 @@ class TrunkedGroup:
     """
     line_prefix = "T-Group"
     name: str
-    avoid: UnidenBool
-    range: UnidenRange
     quick_key: int
+    avoid: UnidenBool = field(default_factory=lambda: UnidenBool())
+    range: UnidenRange = field(default_factory=lambda: UnidenRange())
     channels: list[TrunkedChannel] = field(default_factory=list)
 
     def export(self):
@@ -245,18 +245,18 @@ class ConventionalFrequency:
     """
     line_prefix = "C-Freq"
     name: str
-    avoid: UnidenBool
     freq: int
     modulation: str
-    audio_option: str
-    service_type: ServiceType
-    attenuator: UnidenBool
-    delay: int
-    volume_offset: int
-    alert_tone: AlertTone
-    alert_light: AlertLight
-    number_tag: str
-    p_channel: UnidenBool
+    avoid: UnidenBool = field(default_factory=lambda: UnidenBool())
+    audio_option: str = ''
+    service_type: ServiceType = field(default_factory=lambda: ServiceType())
+    attenuator: UnidenBool = field(default_factory=lambda: UnidenBool())
+    delay: int = 2
+    volume_offset: int = 0
+    alert_tone: AlertTone = field(default_factory=lambda: AlertTone())
+    alert_light: AlertLight = field(default_factory=lambda: AlertLight())
+    number_tag: str = "Off"
+    p_channel: UnidenBool = field(default_factory=lambda: UnidenBool())
 
     def export(self):
         return f"{self.line_prefix}\t\t\t{self.name}\t{self.avoid}\t{self.freq}\t{self.modulation}\t{self.audio_option}\t{self.service_type.index}\t{self.attenuator}\t{self.delay}\t{self.volume_offset}\t{self.alert_tone.export()}\t{self.alert_light.export()}\t{self.number_tag}\t{self.p_channel}\n"
@@ -312,9 +312,9 @@ class ConventionalGroup:
     """
     line_prefix = "C-Group"
     name: str
-    avoid: UnidenBool
-    range: UnidenRange
-    quick_key: int
+    avoid: UnidenBool = field(default_factory=lambda: UnidenBool())
+    range: UnidenRange = field(default_factory=lambda: UnidenRange())
+    quick_key: str = 'Off'
     channels: list[ConventionalFrequency] = field(default_factory=list)
     filter: str = "Global"
 
@@ -520,7 +520,7 @@ class System:
                 case "":
                     return system
                 case _:
-                    print(f'Unknown line found in the text file:')
+                    print('Unknown line found in the text file:')
                     print(line)
                     file.seek(file_pos)
                     return system
