@@ -357,12 +357,30 @@ class ConventionalGroup:
                     return group
 
 
-class SiteFrequency(UnidenTextType):
+@dataclass
+class SiteFrequency:
     line_prefix = "T-Freq"
+    tabs = 3
+    frequency: int
+    unknown_value: UnidenBool = field(default_factory=lambda: UnidenBool(False))
+    dmr_lcn: str = "Off"
+    colour: str = "Off"
 
     def __str__(self):
-        parts = self.value.split("\t")
-        return f"{int(parts[1]) / 1_000_000} Mhz"
+        return f"{self.frequency / 1_000_000} Mhz"
+
+    @classmethod
+    def from_text(cls, text):
+        text = text.strip("\n")
+        offset = len(cls.line_prefix) + cls.tabs
+        if text[:offset] == cls.line_prefix + "\t" * cls.tabs:
+            text = text[offset:]
+            values = text.split('\t')
+            return SiteFrequency(
+                frequency=values['1'], unknown_value=UnidenBool(values[0]), dmr_lcn=values[2], colour=values[3]
+                )
+        else:
+            raise TypeError(f"Text does not match {cls.__name__} type")
 
 
 @dataclass
