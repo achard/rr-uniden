@@ -377,7 +377,7 @@ class SiteFrequency:
             text = text[offset:]
             values = text.split('\t')
             return SiteFrequency(
-                frequency=values['1'], unknown_value=UnidenBool(values[0]), dmr_lcn=values[2], colour=values[3]
+                frequency=values[1], unknown_value=UnidenBool(values[0]), dmr_lcn=values[2], colour=values[3]
                 )
         else:
             raise TypeError(f"Text does not match {cls.__name__} type")
